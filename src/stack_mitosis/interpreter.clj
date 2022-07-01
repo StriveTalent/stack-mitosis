@@ -51,7 +51,24 @@
         false)
       true)))
 
+(defn snapshot
+  [rds id]
+  {:post [(not (nil? %))]}
+  (->> (invoke-logged! rds (op/describe-snapshot id))
+       (:DBSnapshots)
+       (first)))
+
 (defn verify-snapshot-exists
+  [id snapshot]
+  (if (not snapshot)
+    (do
+      (log/error
+       (str/join "\n" ["Specified snapshot doesn't exist: " ""
+                       id]))
+      false)
+    true))
+
+(defn verify-latest-snapshot-exists
   [instances identifiers snapshot]
   (let [instances (map (partial lookup/by-id instances) identifiers)
         vpcs (map #(get-in % [:DBSubnetGroup :VpcId]) instances)
@@ -77,6 +94,10 @@
                     db-id (:DBInstanceIdentifier instance)]
                 [db-id (:TagList (invoke-logged! rds (op/tags arn)))])))
        (into {})))
+
+(defn- trace [msg obj]
+  (log/infof "%s: %s" msg obj)
+  obj)
 
 (defn latest-snapshot
   "Returns the latest snapshot for an instance"

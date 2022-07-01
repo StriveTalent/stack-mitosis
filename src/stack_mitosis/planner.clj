@@ -1,6 +1,7 @@
 (ns stack-mitosis.planner
   (:require [clojure.string :as str]
             [clojure.data]
+            [clojure.tools.logging :as log]
             [stack-mitosis.helpers :as helpers
              :refer [bfs-tree-seq topological-sort update-if]]
             [stack-mitosis.lookup :as lookup]
@@ -38,10 +39,9 @@
                                  (partial lookup/by-id instances))
                            (list-tree instances target))
         root-id (:DBInstanceIdentifier root)
-
-        source-instance (lookup/by-id instances source)
         root-attrs (lookup/clone-replica-attributes root (get alias-tags root-id))
         root-restore-attrs (lookup/restore-snapshot-attributes root (get alias-tags root-id))]
+    (log/infof "Source snapshot %s" source-snapshot)
     (into (if (nil? source-snapshot)
             [(op/create-replica source root-id root-attrs)
              ;; postgres does not allow replica of replica, so need to promote before
@@ -49,7 +49,7 @@
              (op/promote root-id)
              ;; postgres only allows backups after promotion
              (op/enable-backups root-id (lookup/post-create-replica-attributes root))]
-            [(op/restore-snapshot source-snapshot source-instance root-id root-restore-attrs)
+            [(op/restore-snapshot (:DBSnapshotIdentifier source-snapshot) source root-id root-restore-attrs)
              (op/enable-backups root-id (lookup/post-restore-snapshot-attributes root))])
           (mapcat
            (fn [instance]

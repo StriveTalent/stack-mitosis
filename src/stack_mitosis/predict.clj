@@ -80,12 +80,11 @@
 (defmethod predict :RestoreDBInstanceFromDBSnapshot
   [instances op]
   {:post [(lookup/exists? % (r/db-id op))]}
-  (let [source-id (->> op :meta :SourceDBInstance :DBInstanceIdentifier)
-        source-db (lookup/by-id instances source-id)
-        target-id (r/db-id op)
+  (let [target-id (r/db-id op)
+        target-db (lookup/by-id instances target-id)
         ;; We use the arn for some policy calculations, and we don't want it to
         ;; end up being the source-arn
-        target-arn (-> source-db :DBInstanceArn (str/split #":db:") first (str ":db:" target-id))]
+        target-arn (:DBInstanceArn target-db)]
     (as-> op $
       (:request $)
       (dissoc $ :DBSnapshotIdentifier)
@@ -93,8 +92,7 @@
       ;; complicated. We're getting a DB in the new subnet, missing a few
       ;; params, that are not going to be === the source params, but carry
       ;; default values from RDS.
-      (merge source-db $)
-      (assoc $ :DBInstanceArn target-arn)
+      (merge target-db $)
       (dissoc $ :ReadReplicaDBInstanceIdentifiers)
       (conj instances $))))
 

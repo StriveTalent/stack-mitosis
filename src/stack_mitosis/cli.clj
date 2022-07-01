@@ -21,6 +21,7 @@
    ["-c" "--credentials FILENAME" "Credentials file in edn for iam assume-role"]
    ["-p" "--plan" "Display expected flightplan for operation."]
    ["-i" "--iam-policy" "Generate IAM policy for planned actions."]
+   [nil "--source-snapshot SRC" "Snapshot name or ARN to restore."]
    [nil "--restore-snapshot" "Always clone using snapshot restore."]
    ["-h" "--help"]])
 
@@ -53,19 +54,23 @@
       (sudo/sudo-provider role)))
   (let [rds (interpreter/client)
         instances (interpreter/databases rds)]
-    (when (interpreter/verify-databases-exist instances [source target])
-      (let [same-vpc (lookup/same-vpc?
-                      (lookup/by-id instances source)
-                      (lookup/by-id instances target))
-            use-restore-snapshot (or (:restore-snapshot options) (not same-vpc))
-            source-snapshot (if use-restore-snapshot
-                              (interpreter/latest-snapshot rds source)
-                              nil)]
+    (when (or (:source-snapshot options)
+              (interpreter/verify-databases-exist instances [source target]))
+      (let [use-restore-snapshot (or (:restore-snapshot options)
+                                     (not (lookup/same-vpc?
+                                           (lookup/by-id instances source)
+                                           (lookup/by-id instances target))))
+            source-snapshot-id (if use-restore-snapshot
+                                 (or (:source-snapshot options) (interpreter/latest-snapshot rds source)))
+            source-snapshot (when source-snapshot-id
+                              (interpreter/snapshot rds source-snapshot-id))]
 
         (when (or (not use-restore-snapshot)
-                  (interpreter/verify-snapshot-exists instances [source target]
+                  (and (:source-snapshot options) (interpreter/verify-snapshot-exists source-snapshot-id source-snapshot))
+                  (interpreter/verify-latest-snapshot-exists instances [source target]
                                                       source-snapshot))
           (let [tags (interpreter/list-tags rds instances target)
+                source (if source-snapshot (lookup/source-id source-snapshot) source)
                 plan (plan/replace-tree instances source source-snapshot target
                                         :restart restart :tags tags)]
             (cond (:plan options)

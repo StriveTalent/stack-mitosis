@@ -52,6 +52,11 @@
    {:op :DescribeDBSnapshots
     :request {:DBInstanceIdentifier target}}))
 
+(defn describe-snapshot
+  ([id]
+   {:op :DescribeDBSnapshots
+    :request {:DBSnapshotIdentifier id}}))
+
 (defn promote
   [id]
   {:op :PromoteReadReplica
