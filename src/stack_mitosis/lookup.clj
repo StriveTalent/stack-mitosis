@@ -170,7 +170,7 @@
          (->> original
               :DBParameterGroups
               (some (fn [group]
-                      (and (= (:ParameterApplyStatus group) "in-sync")
+                      (and (contains? #{"in-sync" "pending-reboot"} (:ParameterApplyStatus group))
                            (:DBParameterGroupName group)))))
          }]
     (-> original
@@ -218,7 +218,7 @@
          (->> original
               :DBParameterGroups
               (some (fn [group]
-                      (and (= (:ParameterApplyStatus group) "in-sync")
+                      (and (contains? #{"in-sync" "pending-reboot"} (:ParameterApplyStatus group))
                            (:DBParameterGroupName group)))))}]
     (-> original
         (select-keys attributes-to-clone)
