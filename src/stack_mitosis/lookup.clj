@@ -208,6 +208,7 @@
 
         translated-attributes
         {:EnablePerformanceInsights (:PerformanceInsightsEnabled original) ;; restore_not_supported
+         :ManageMasterUserPassword (if (nil-or-empty? (:MasterUserSecret original)) nil true)
 
          ;; Triggers "The specified DB instance is already in the target DB subnet group"
          ;; probably need to detect if changing? disabling for now
