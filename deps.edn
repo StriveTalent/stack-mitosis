@@ -4,7 +4,7 @@
   com.cognitect.aws/api       {:mvn/version "0.8.498"}
   com.cognitect.aws/endpoints {:mvn/version "1.1.11.934"}
 
-  com.cognitect.aws/rds       {:mvn/version "810.2.817.0"}
+  com.cognitect.aws/rds       {:mvn/version "848.2.1413.0"}
 
   ;; for STS refresh
   com.cognitect.aws/iam       {:mvn/version "801.2.704.0"}
