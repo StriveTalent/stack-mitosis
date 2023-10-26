@@ -195,7 +195,8 @@
   has more information on these attributes."
   [original]
   (let [attributes-to-clone ;; attributes not supported by restore-snapshot
-        [:MonitoringRoleArn
+        [:CACertificateIdentifier
+         :MonitoringRoleArn
          :MonitoringInterval
          :PerformanceInsightsKMSKeyId
          :PerformanceInsightsRetentionPeriod
