@@ -104,6 +104,7 @@
   [rds target]
   (->> (invoke-logged! rds (op/list-snapshots target))
        (:DBSnapshots)
+       (filter (fn [snapshot] (= (:Status snapshot) "available")))
        (sort-by :SnapshotCreateTime)
        (last)
        (:DBSnapshotIdentifier)))
